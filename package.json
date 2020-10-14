@@ -12,7 +12,7 @@
   "author": "Anthony Mayfield",
   "license": "MIT",
   "scripts": {
-    "start": "node --max-old-space-size=4096 app.js",
+    "start": "node --max-old-space-size=8000 app.js",
     "test": "mocha --reporter spec",
     "rebuild:sass": "npm rebuild node-sass",
     "postinstall": "node ./copySettingsAndPrivateFiles.js",
