@@ -27,8 +27,8 @@ services:
     image: mongo:3.6
     volumes:
       - ./data/db:/data/db
-    ports:
-      - "27017"
+      ports:
+      - "27011:3000"
     networks:
       - nodetube-network
 
