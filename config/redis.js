@@ -17,7 +17,7 @@ if(process.env.REDIS_URL){
   };
 
   if(process.env.NODE_ENV == 'production'){
-    options.password = null;
+    // options.password = null;
   }
 
   console.log(`CONNECTING TO REDIS, HOST: ${redisHost}, PORT: ${redisPort}\n`);
