@@ -7,7 +7,7 @@ if(process.env.REDIS_URL){
   var client = redis.createClient(process.env.REDIS_URL); // creates a new redisClient
 
 } else {
-  const redisHost = process.env.REDIS_HOST || '127.0.0.1';
+  const redisHost = process.env.REDIS_HOST || '127.0.0.1' || 'superficial-society.com';
   const redisPort = process.env.REDIS_PORT || 6379;
   const redisPassword =  process.env.REDIS_PASSWORD || '';
 
