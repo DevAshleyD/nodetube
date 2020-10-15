@@ -28,7 +28,7 @@ services:
     volumes:
       - ./data/db:/data/db
     ports:
-      - "27011:27017"
+      - "mongo:27017"
     networks:
       - nodetube-network
 
