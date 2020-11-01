@@ -28,7 +28,10 @@ block content
             | Login
 
           // turn off forgot password, should expose it as an env var
-          //a.btn.btn-link(href='/forgot') Forgot your password?
+
+          // show the forgot your password button
+          if forgotEmailFunctionalityOn
+            a.btn.btn-link.fw(href='/forgot' style="font-size:17px") Forgot your password?
       .form-group
         .col-sm-12
           hr

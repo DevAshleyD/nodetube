@@ -258,6 +258,9 @@ function frontendRoutes(app){
   app.post('/api/react/:upload/:user', passportConfig.isAuthenticated, internalApiController.react);
 
   app.post('/api/updateLastWatchedTime', passportConfig.isAuthenticated, internalApiController.updateLastWatchedTime);
+  app.post('/api/subscribeToPushNotifications', passportConfig.isAuthenticated, internalApiController.subscribeToPushNotifications);
+  app.post('/api/sendUserPushNotifs', passportConfig.isAuthenticated, internalApiController.sendUserPushNotifs);
+  app.post('/api/subscribeToEmailNotifications', passportConfig.isAuthenticated, internalApiController.subscribeToEmailNotifications);
 
   // TODO: why admin controller? (fix)
   app.post('/api/upload/delete', passportConfig.isAuthenticated, adminBackendController.deleteUpload);
@@ -276,7 +279,7 @@ function frontendRoutes(app){
 
   // purchase endpoints
   app.post('/api/purchase/plus', passportConfig.isAuthenticated, purchaseController.purchasePlus);
-  app.post('/api/purchase/donation', passportConfig.isAuthenticated, purchaseController.donation);
+  app.post('/api/purchase/donation', purchaseController.donation);
   app.post('/api/purchase/credit',passportConfig.isAuthenticated,  purchaseController.purchaseCredits);
 
   app.get('/importer', accountFrontendController.getImporter);
@@ -323,16 +326,24 @@ function frontendRoutes(app){
   app.get('/support/reports', authMiddleware.moderatorAuth, supportFrontendController.getReports);
 
   /** ADMIN PAGES **/
+  app.get('/admin', authMiddleware.adminAuth, adminFrontendController.getAdminOverview);
   app.get('/admin/users', authMiddleware.adminAuth, adminFrontendController.getUsers);
+  app.get('/admin/users/:page', authMiddleware.adminAuth, adminFrontendController.getUsers);
   app.get('/admin/subscriptions', authMiddleware.adminAuth, adminFrontendController.subscriptions);
+  app.get('/admin/subscriptions/:page', authMiddleware.adminAuth, adminFrontendController.subscriptions);
   app.get('/admin/comments', authMiddleware.adminAuth, adminFrontendController.getComments);
+  app.get('/admin/comments/:page', authMiddleware.adminAuth, adminFrontendController.getComments);
   app.get('/admin/uploads', authMiddleware.adminAuth, adminFrontendController.getUploads);
+  app.get('/admin/uploads/:page', authMiddleware.adminAuth, adminFrontendController.getUploads);
   app.get('/admin/dailyStats', authMiddleware.adminAuth, adminFrontendController.dailyStats);
   app.get('/admin/reacts', authMiddleware.adminAuth, adminFrontendController.reacts);
+  app.get('/admin/reacts/:page', authMiddleware.adminAuth, adminFrontendController.reacts);
   app.get('/admin/siteVisitors', authMiddleware.adminAuth, adminFrontendController.getSiteVisitors);
+  app.get('/admin/siteVisitors/:page', authMiddleware.adminAuth, adminFrontendController.getSiteVisitors);
   app.get('/admin/siteVisitors/:id', authMiddleware.adminAuth, adminFrontendController.getSiteVisitorHistory);
   app.get('/admin/notifications', authMiddleware.adminAuth, adminFrontendController.getNotificationPage);
   app.get('/admin/adminAudit', authMiddleware.adminAuth, adminFrontendController.getAdminAudit);
+  app.get('/admin/adminAudit/:page', authMiddleware.adminAuth, adminFrontendController.getAdminAudit);
 
   /** SOCIAL MEDIA ENDPOINTS **/
   app.get('/admin/createSocialPost', authMiddleware.adminAuth, socialMediaFrontendController.getCreateSocialPost);
@@ -348,6 +359,8 @@ function frontendRoutes(app){
   app.post('/admin/undeleteAccount', authMiddleware.moderatorAuth, adminBackendController.undeleteAccount);
   app.post('/admin/changeRatings', authMiddleware.adminAuth, adminBackendController.changeRatings);
   app.post('/admin/getUserAccounts', authMiddleware.adminAuth, adminBackendController.getUserAccounts);
+
+  app.post('/save-subscription', passportConfig.isAuthenticated, internalApiController.savePushEndpoint);
 
   // find all ips and accounts associated
   app.post('/admin/deleteAllUsersAndBlockIps', authMiddleware.adminAuth, adminBackendController.deleteAllUsersAndBlockIps);

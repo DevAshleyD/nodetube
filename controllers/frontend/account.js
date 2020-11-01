@@ -12,6 +12,11 @@ const React = require('../../models/index').React;
 const Notification = require('../../models/index').Notification;
 const SocialPost = require('../../models/index').SocialPost;
 const Subscription = require('../../models/index').Subscription;
+const PushSubscription = require('../../models/index').PushSubscription;
+const EmailSubscription = require('../../models/index').EmailSubscription;
+
+const PushEndpoint = require('../../models/index').PushEndpoint;
+
 const RSS = require('rss');
 
 const { uploadServer, uploadUrl } = require('../../lib/helpers/settings');
@@ -47,6 +52,8 @@ require('intl-messageformat/dist/locale-data/en');
 const timeAgoEnglish = new javascriptTimeAgo('en-US');
 
 const secondsToFormattedTime = timeHelper.secondsToFormattedTime;
+
+const forgotEmailFunctionalityOn = process.env.FORGOT_PASSWORD_EMAIL_FUNCTIONALITY_ON == 'true';
 
 // TODO: pull this function out
 async function addValuesIfNecessary(upload, channelUrl){
@@ -508,6 +515,33 @@ exports.getChannel = async(req, res) => {
 
     const joinedTimeAgo = timeAgoEnglish.format(user.createdAt);
 
+    const pushSubscriptionSearchQuery = {
+      subscribedToUser : user._id,
+      subscribingUser: req.user._id,
+      active: true
+    }
+
+    let existingPushSub;
+    if(req.user){
+      existingPushSub = await PushSubscription.findOne(pushSubscriptionSearchQuery);
+    }
+
+    let existingEmailSub;
+    if(req.user){
+      existingEmailSub = await EmailSubscription.findOne(pushSubscriptionSearchQuery);
+    }
+
+    console.log(existingPushSub);
+
+    // if the user already has push notis turned on
+    const alreadyHavePushNotifsOn = Boolean(existingPushSub);
+
+    const alreadySubscribedForEmails = Boolean(existingEmailSub);
+
+    console.log('already');
+
+    console.log(alreadyHavePushNotifsOn);
+
     res.render('account/channel', {
       channel : user,
       title: user.channelName || user.channelUrl,
@@ -531,7 +565,9 @@ exports.getChannel = async(req, res) => {
       joinedTimeAgo,
       media,
       page,
-      orderBy
+      orderBy,
+      alreadyHavePushNotifsOn,
+      alreadySubscribedForEmails
     });
 
   } catch(err){
@@ -835,9 +871,16 @@ exports.getConfirm = async(req, res, next) => {
  * Forgot Password page.
  */
 exports.getForgot = (req, res) => {
+
+  if(!forgotEmailFunctionalityOn){
+    return res.send('email functionality off');
+  }
+
+  // if person already logged in send to default page
   if(req.isAuthenticated()){
     return res.redirect('/');
   }
+
   res.render('account/forgot', {
     title: 'Forgot Password'
   });
@@ -869,8 +912,10 @@ exports.getLogin = (req, res) => {
   if(req.user){
     return res.redirect('/');
   }
+
   res.render('account/login', {
-    title: 'Login'
+    title: 'Login',
+    forgotEmailFunctionalityOn
   });
 };
 

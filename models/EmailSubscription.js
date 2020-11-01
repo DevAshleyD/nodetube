@@ -6,9 +6,9 @@ require('javascript-time-ago/intl-messageformat-global');
 require('intl-messageformat/dist/locale-data/en');
 const timeAgoEnglish = new javascriptTimeAgo('en-US');
 
-// FIND THE USER WITH ACTIVE SUBSCRIPTIONS, SCROLL THROUGH THEIR PUSH ENDPOINTS AND PUSH TO THEM
+// FIND USERS WITH ACTIVE EMAIL SUBSCRIPTIONS, GET THEIR EMAIL AND EMAIL THEM
 
-const pushSubscriptionSchema = new mongoose.Schema({
+const emailSubscriptionSchema = new mongoose.Schema({
   subscribingUser: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
@@ -36,11 +36,11 @@ const pushSubscriptionSchema = new mongoose.Schema({
   }
 });
 
-pushSubscriptionSchema.virtual('timeAgo').get(function(){
+emailSubscriptionSchema.virtual('timeAgo').get(function(){
   return timeAgoEnglish.format( new Date(this.createdAt) );
 });
 
-const PushSubscription = mongoose.model('PushSubscription', pushSubscriptionSchema);
+const EmailSubscription = mongoose.model('emailSubscription', emailSubscriptionSchema);
 
-module.exports = PushSubscription;
+module.exports = EmailSubscription;
 
