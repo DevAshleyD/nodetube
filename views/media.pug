@@ -2,6 +2,11 @@ extends layout
 
 block content
 
+    style.
+        .swal2-content {
+            font-size:16px !important;
+        }
+
     if !upload.description
         style.
             @media (min-width: 900px) {
@@ -15,12 +20,12 @@ block content
     // TODO: also consider using upload.video
     if upload.bitrateInKbps > 1500 && upload.fileType == 'video'
         style.
-            /** everything 650 and below */
+            /** everything 668px width and below */
             /* on mobile we dont do a max height in other words */
             @media (min-width: 668px) {
 
                 .plyr {
-                    height: 794px;
+                    height: 85vh;
                 }
             }
 
@@ -38,23 +43,25 @@ block content
 
     else
         style.
-            /** everything 650 and below */
+            /** everything 668px width and below */
             /* on mobile we dont do a max height in other words */
             @media (min-width: 668px) {
 
                 .plyr {
-                    height: 794px;
+                    height: 85vh;
                 }
             }
 
     style.
 
+        .plyr {
+            max-height: 102.5vh;
+            max-width: 100vw;
+        }
+
         @media (min-width: 668px) {
 
-            .plyr {
-                max-height: 100vh;
-                max-width: 100vw;
-            }
+
         }
 
         .pending-string {
@@ -401,7 +408,7 @@ block content
             div.display-div.magnetic(style="min-width:50%;min-height:50%;margin:0 auto;margin-top: -25px;")
                 // margin-top:46px;
 
-                video#media_player.display-element(playsinline poster=`${uploadServer}/${upload.uploader.channelUrl}/${upload.thumbnails.generated || upload.thumbnails.medium}` controls='', style="max-width:100%;background-color:black;")
+                video#media_player.display-element(playsinline poster=`${uploadServer}/${upload.uploader.channelUrl}/${upload.thumbnails.generated || upload.thumbnails.medium}` controls='', style="max-width:100%;background-color:black;" crossorigin="anonymous")
                     // to
                     source.video-source(src=`${serverToUse}/${upload.uploader.channelUrl}/${upload.uniqueTag}.mp4`, type='video/mp4')
 
@@ -416,7 +423,7 @@ block content
             // if it's an audio
         else if upload.fileType === 'audio'
             div
-                audio#media_player.my_audio(playsinline style="width:80%;" controls='', preload='none')
+                audio#media_player.my_audio(playsinline style="width:80%;" controls='', preload='auto')
 
                     if upload.fileExtension == '.m4a'
                         source(src=`${serverToUse}/${upload.uploader.channelUrl}/${upload.uniqueTag}${upload.fileExtension}`, type='audio/mp4')
@@ -461,8 +468,9 @@ block content
 
 
             // UPLOADER DETAILS SECTION
+            // LEFT THIRD OF THE PAGE
             div.col-sm-3.uploader-details-section(style="")
-                h3.uploader-name(style="margin-top:25px;font-size:26px;")
+                h3.uploader-name(style="margin-top:25px;font-size:23px;")
                     if upload.uploader.customThumbnail
                         a(href=`/user/${upload.uploader.channelUrl}`)
 
@@ -489,20 +497,50 @@ block content
                             span.nodetube-pro PLUS
 
 
-                    // TODO: show this if it's pending or not
-                if upload.visibility != 'pending'
-                    if alreadySubbed
-                        button.subscribe.btn.fw.btn-danger.op80.unsubscribeButton(style="border-radius:4px;") Unsubscribe (#{subscriberAmount})
-                    else
-                        button.subscribe.btn.fw.btn-success.op80.subscribeButton(style="border-radius:4px;") Subscribe (#{subscriberAmount})
 
-                if user
-                    div(style="margin-top:12px")
-                        // TODO: this should create a push subsciption, and it will also send a query to see if it should create a new service worker
+                if alreadySubbed
+                    button.subscribe.btn.fw.btn-danger.op80.unsubscribeButton(style="border-radius:4px;") Unsubscribe (#{subscriberAmount})
+                else
+                    button.subscribe.btn.fw.btn-success.op80.subscribeButton(style="border-radius:4px;") Subscribe (#{subscriberAmount})
+
+                div(style="margin-top:12px")
+                    // TODO: this should create a push subsciption, and it will also send a query to see if it should create a new service worker
+                    div.pushSubscriptionsDiv(style="display:inline-block")
                         h2.pushNotificationIcon(style="display:inline")
-                            i.share-icon.fas.fa-bell(aria-hidden="true" style="cursor:pointer;font-size:25px;margin-left:0px;color:white;")
+                            i.fas.fa-bell(aria-hidden="true" style="cursor:pointer;font-size:25px;margin-left:0px;color:white;")
+                        p.pushSubscriptions(style="margin-left:1px") #{amountOfPushSubscriptions}
+                    div.emailSubscriptionsDiv(style="display:inline-block")
                         h2.emailNotificationIcon(style="display:inline")
-                            i.share-icon.fas.fa-envelope(aria-hidden="true" style="cursor:pointer;font-size:25px;margin-left:10px;color:white;")
+                            i.fas.fa-envelope(aria-hidden="true" style="cursor:pointer;font-size:25px;margin-left:10px;color:white;")
+                        p.emailSubscriptions(style="margin-left:10px") #{amountOfEmailSubscriptions}
+
+                    //div(style="margin-top:12px")
+                    //    // TODO: this should create a push subsciption, and it will also send a query to see if it should create a new service worker
+                    //    h2.pushNotificationIcon(style="display:inline")
+                    //        i.share-icon.fas.fa-bell(aria-hidden="true" style="cursor:pointer;font-size:25px;margin-left:0px;color:white;")
+                    //    h2.emailNotificationIcon(style="display:inline")
+                    //        i.share-icon.fas.fa-envelope(aria-hidden="true" style="cursor:pointer;font-size:25px;margin-left:10px;color:white;")
+
+                if user && ( user.role == 'admin' || user.role == 'moderator')
+                    div.moderator-buttons
+                        p User Trusted = #{upload.uploader.privs.autoVisibleUpload}
+                        if upload.visibility == 'pending'
+                            form(action="/pending" method="POST")
+                                input(type='hidden', name='fromMedia', value='true')
+                                input(type='hidden', name='_csrf', value=_csrf)
+                                input(type='hidden', name='uniqueTag', value=`${upload.uniqueTag}`)
+                                button.btn.btn-success(name="moderationValue" value="approve" type="submit") Approve
+                                br
+                                br
+                                button.btn.btn-success(name="moderationValue" value="approveAndTrustUser" type="submit") Approve And Trust User
+                                br
+                                br
+                                button.btn.btn-danger(name="moderationValue" value="banVideo" type="submit" ) Ban Video
+                                br
+                                br
+                                button.btn.btn-danger(name="moderationValue" value="banVideoAndUser" type="submit") Ban Video And User
+                                br
+                                br
 
                 //br
                 ////- push notification functionality
@@ -511,17 +549,13 @@ block content
                 //        img.pushNotificationIcon(src="/images/push-notif-dark.jpg" aria-hidden="true" style="cursor:pointer;color:#a5a5a5;width:43px;")
 
 
-                br
-                br
-
-
             div.col-sm-6.uploadDescriptionColumn
 
                 div.uploadTitle.desktopTitle(style="margin-bottom:20px;")
 
-                    h2.balance-text(class="upload-title-value" style="display:inline;text-wrap:balance;width:80%;margin:0 auto;font-weight:300;color: #a9a9a9 !important;margin-bottom:20px;") #{upload.title}
+                    h2.balance-text(class="upload-title-value" style="font-size:24px;display:inline;text-wrap:balance;width:80%;margin:0 auto;font-weight:300;color: #a9a9a9 !important;margin-bottom:20px;") #{upload.title}
                         if upload.formattedDuration
-                            h2.fw(style="display:inline;color: #a9a9a9; !important;").
+                            h2.fw(style="font-size:24px;display:inline;color: #a9a9a9; !important;").
                                 &nbsp - #{upload.formattedDuration}
 
                 if upload.description
@@ -588,18 +622,24 @@ block content
 
                         br
 
-                        div.bottomButtons(style="margin-top:-21px;padding-bottom:10px;")
+                        div.bottomButtons(style="margin-top:-17px;padding-bottom:10px;")
 
                             //// embed button
                             div.change-size-button(style="margin-left:0px;color: rgb(121 119 119) !important;")
                                 h2.share-button
-                                    i.share-icon.fas.fa-code(aria-hidden="true" style="cursor:pointer;font-size:19px;margin-left:0px;")
+                                    i.share-icon.fas.fa-code(aria-hidden="true" style="cursor:pointer;font-size:26px;margin-left:0px;")
+
+                            // report upload button
+                            div.change-size-button(style="cursor:pointer;margin-left:6px;color: rgb(121 119 119) !important;")
+                                h2.rss-button(style="font-size:19px;")
+                                    i.share-icon.fas.fa-rss(aria-hidden="true" style="cursor:pointer;font-size:26px;")
 
 
                             // report upload button
-                            div.change-size-button(style="cursor:pointer;margin-left:0px;color: rgb(121 119 119) !important;")
+                            div.change-size-button(style="cursor:pointer;margin-left:6px;color: rgb(121 119 119) !important;")
                                 h2.report-button(style="font-size:19px;")
-                                    i.share-icon.fa.fa-exclamation-triangle(aria-hidden="true" style="cursor:pointer;font-size:17px;")
+                                    i.share-icon.fa.fa-exclamation-triangle(aria-hidden="true" style="cursor:pointer;font-size:26px;")
+
 
 
 
@@ -659,6 +699,9 @@ block content
                 if upload.uploader
                     h4.fw(style="color:a5a5a5")
                         | Uploaded #{upload.timeAgo} &nbsp
+
+                    h4.fw(style="font-size:15px;color:a5a5a5")
+                        | #{uploadedAtTime} &nbsp
 
                     if upload.visibility == 'removed'
                         h2 Upload Deleted
@@ -859,128 +902,19 @@ block extra_js
   script(src="/js/notificationServiceWorker.js")
 
   if user
-        script.
+    include pugJavascript/emailAndPushNotifications
 
-            $(document).ready(function(){
-
-              var alreadyHaveEmailNotifsOn = '#{alreadySubscribedForEmails}' == 'true'
-
-              console.log('already have email notis on')
-
-              if (alreadyHaveEmailNotifsOn) {
-                $('.emailNotificationIcon i').css('color', 'white')
-              } else {
-                $('.emailNotificationIcon i').css('color', 'gray')
-              }
-
-              $('.emailNotificationIcon').click(function () {
-                console.log('Email notification icon clicked');
-                var csrf = '#{_csrf}'
-
-                const data = {
-                  _csrf: csrf,
-                  user: '#{user.channelUrl}',
-                  channel: '#{upload.uploader.channelUrl}'
-                }
-
-                $.ajax({
-                  type: 'POST',
-                  url: `/api/subscribeToEmailNotifications`,
-                  data,
-                  success: function (data) {
-
-                    $('.emailNotificationIcon i').css('color', 'white')
-                    let swalText = 'You have subscribed to their email notifications'
-
-                    if (alreadyHaveEmailNotifsOn) {
-                      swalText = 'You have unsubscribed from their email notifications'
-                      $('.emailNotificationIcon i').css('color', 'gray')
-                    }
-
-                    swal(swalText);
-
-                    alreadyHaveEmailNotifsOn = !alreadyHaveEmailNotifsOn;
-
-                    console.log(data);
-
-                    // Shows undefined when at 100%
-
-
-                  },
-                  error: function (err) {
-                    console.log(err);
-                  }
-                });
-              })
-
-              var alreadyHavePushNotifsOn = '#{alreadyHavePushNotifsOn}' == 'true'
-
-              console.log('readl');
-              console.log(alreadyHavePushNotifsOn);
-
-              if (alreadyHavePushNotifsOn) {
-                $('.pushNotificationIcon i').css('color', 'white')
-              } else {
-                  $('.pushNotificationIcon i').css('color', 'gray')
-              }
-
-              if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-                $('.pushNotificationIcon i').hide()
-              }
-
-
-              $('.pushNotificationIcon').click(function () {
-                console.log('hello');
-                var csrf = '#{_csrf}'
-
-                const data = {
-                  _csrf: csrf,
-                  user: '#{user.channelUrl}',
-                  channel: '#{upload.uploader.channelUrl}'
-                }
-
-                $.ajax({
-                  type: 'POST',
-                  url: `/api/subscribeToPushNotifications`,
-                  data,
-                  success: function (data) {
-
-                    // by default, turn the color grey and load up 'you have subbed' as the text
-                    $('.pushNotificationIcon i').css('color', 'white')
-                    let swalText = 'You have subscribed to their push notifications'
-
-                    // if push notifs already on
-                    if (alreadyHavePushNotifsOn) {
-                      swalText = 'You have unsubscribed from their push notifications'
-                      $('.pushNotificationIcon i').css('color', 'gray')
-                    }
-
-                    swal(swalText);
-
-                    alreadyHavePushNotifsOn = !alreadyHavePushNotifsOn;
-
-                    console.log(data);
-                    //- console.log(data);
-
-                    // Shows undefined when at 100%
-
-
-                  },
-                  error: function (err) {
-                    console.log(err);
-                  }
-                });
-              })
-            })
-
+    script.
+        // pretty sure this is the register of a worker
+        $('.pushNotificationIcon').click(function () {
+          main();
+        })
+  else
+      include pugJavascript/registerToUseFeature
 
   script.
 
     $(document).ready(function () {
-
-      $('.pushNotificationIcon').click(function(){
-        main();
-      })
 
       const uploadDescriptionText = $('#uploadDescriptionText');
 
@@ -1029,15 +963,15 @@ block extra_js
 
       // this works properly because it runs right when the video has started
       v.addEventListener('playing', function (event) {
-        console.log('event!!')
-        console.log(event);
+        // console.log('event!!')
+        // console.log(event);
 
         // $('.frameJumper').css({"visibility":"hidden"});
       })
 
       v.addEventListener('pause', function (event) {
-        console.log('event!!')
-        console.log(event);
+        // console.log('event!!')
+        // console.log(event);
 
         // $('.frameJumper').css({"visibility":"initial"});
       })
@@ -1121,15 +1055,10 @@ block extra_js
         });
 
         $('.screenshotButton').click(function(){
-          const width = player.media.videoWidth;
-          const height = player.media.videoHeight;
-          const canvas = Object.assign(document.createElement('canvas'), {width, height});
-          canvas.getContext('2d').drawImage(player.media, 0, 0, width, height);
 
           const thumbnailUrl = '#{uploadServer}/#{upload.uploader.channelUrl}/#{upload.thumbnails.custom || upload.thumbnails.generated}'
 
           var link = document.createElement('a');
-
 
           var title = `#{upload.title}`
 
@@ -1144,6 +1073,11 @@ block extra_js
 
 
           } else {
+
+            const width = player.media.videoWidth;
+            const height = player.media.videoHeight;
+            const canvas = Object.assign(document.createElement('canvas'), {width, height});
+            canvas.getContext('2d').drawImage(player.media, 0, 0, width, height);
 
             link.download = `#{title}.png`;
 
@@ -1248,7 +1182,7 @@ block extra_js
         // if the theatre mode is off, scroll to where the header ends, and go large screen
         if(theatreModeOn == false){
           window.scrollTo(0, 67);
-          $('.plyr').css('height', '98.5vh')
+          $('.plyr').css('height', '102.5vh')
           console.log('HIT!')
 
           $('.display-element').css('border', '0px solid white')
@@ -1337,6 +1271,28 @@ block extra_css
         margin-top: 0px;
     }
 
+    /*button.plyr__control:first-of-type {*/
+    /*    width: 100px;*/
+    /*    height: 100px;*/
+    /*}*/
+
+    /*button:first-of-type.plyr__control {*/
+    /*    width: 100px;*/
+    /*    height: 100px;*/
+    /*}*/
+
+    button[data-plyr="play"] > svg[role="presentation"]{
+        height:58px;
+        width:58px;
+        left:7px;
+    }
+
+    .plyr__controls__item > svg[role="presentation"]{
+        height: 20px !important;
+        width: 20px !important;
+        left: 18px !important;
+    }
+
 
 block extra_footer_js
 
@@ -1351,6 +1307,8 @@ block extra_footer_js
   script.
 
     $(document).ready(function () {
+
+
       // old scroll down to change the header
       //window.scrollTo(0, 21);
 
@@ -1517,23 +1475,35 @@ block extra_footer_js
 
              // console.log("fadeIn");
 
-            // what's going on here?
+            // if it's under the timeout time, make the cursor rule regular
+            // aka,the inverse of the other rule
             $('html').css({
               cursor: ''
             });
+
+            // $('.plyr__controls').show()
+
+
           } else {
+
             $('.plyr').css({
               cursor: 'default'
             });
+
+            // $('.plyr__controls').show()
+
             fadeInBuffer = false;
           }
 
 
+          /** hiding the cursor after 2030 ms **/
           timer = setTimeout(function () {
              console.log("fadeout");
             $('.plyr').css({
               cursor: 'none'
             });
+
+            // $('.plyr__controls').hide()
 
             fadeInBuffer = true;
           }, 2030)
@@ -1580,6 +1550,8 @@ block extra_footer_js
   include ./mediaPlayerPartials/repeatFunctionalityJs
 
   include ./mediaPlayerPartials/reactFunctionalityJs
+
+  include ./mediaPlayerPartials/promptToRegisterFunctionality
 
   // if the upload is longer than 15 minutes and there's a user
   if ( upload.durationInSeconds > (15 * 60) ) && user

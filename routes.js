@@ -139,7 +139,10 @@ function frontendRoutes(app){
   app.get('/docs', publicController.getDocs);
 
   app.get('/donate', publicController.getDonate);
+  app.get('/help', publicController.getHelp);
+
   app.get('/plus', publicController.getPlus);
+  app.get('/mobile', publicController.getMobile);
 
   app.get('/landing', publicController.getLandingPage);
 
@@ -250,6 +253,8 @@ function frontendRoutes(app){
 
   /** include passport here because if its a file host, route is already loaded **/
   app.post('/api/channel/thumbnail/delete', passportConfig.isAuthenticated, internalApiController.deleteChannelThumbnail);
+  app.post('/api/deleteUserEmail', passportConfig.isAuthenticated, internalApiController.deleteUserEmail);
+
   app.post('/api/upload/:uniqueTag/edit', passportConfig.isAuthenticated, internalApiController.editUpload);
   app.post('/api/upload/:uniqueTag/thumbnail/delete', passportConfig.isAuthenticated, internalApiController.deleteUploadThumbnail);
   app.post('/api/upload/:uniqueTag/captions/delete', passportConfig.isAuthenticated, internalApiController.deleteUploadCaption);
@@ -290,6 +295,7 @@ function frontendRoutes(app){
   app.get('/account/viewHistory', passportConfig.isAuthenticated, accountFrontendController.getViewHistory);
   app.get('/account/reactHistory', passportConfig.isAuthenticated, accountFrontendController.getReactHistory);
   app.get('/account/livestreaming', passportConfig.isAuthenticated, accountFrontendController.livestreaming);
+  app.get('/account/extra', passportConfig.isAuthenticated, accountFrontendController.getExtraPage);
 
   app.get('/media/subscribed', passportConfig.isAuthenticated, accountFrontendController.subscriptions);
   app.get('/media/subscribed/:page', passportConfig.isAuthenticated, accountFrontendController.subscriptions);
@@ -373,6 +379,14 @@ function frontendRoutes(app){
       title: 'Debug'
     });
   });
+
+  // req.params
+  // app.get('/:media', mediaPlayerController.getMedia)
+
+  // "vanity url"
+  app.get('/:channel', accountFrontendController.getChannel);
+
+  app.get('/:channel/:media', mediaPlayerController.getMedia);
 
   // anything that misses, return a 404
   app.get('*', function(req, res){

@@ -58,6 +58,12 @@ block content
             padding-top: 30px;
         }
 
+    if isUser || isAdmin || ( user && user.role == 'moderator' )
+        style.
+            .uploadCard {
+                margin-bottom:45px !important;
+            }
+
     div.channel-information.container
         div.col-sm-12
             div.col-sm-4(style="margin:0 auto;text-align:center;")
@@ -83,13 +89,17 @@ block content
                 else
                     button(style="display:inherit;margin:0 auto;border-radius:3px;").fw.subscribe.btn.btn-success Subscribe (#{subscriberAmount})
 
-                if user
-                    div(style="margin-top:12px")
-                        // TODO: this should create a push subsciption, and it will also send a query to see if it should create a new service worker
+                // TODO: should support non logged in user where you click it and it says: please login to use this feature
+                div(style="margin-top:12px")
+                    // TODO: this should create a push subsciption, and it will also send a query to see if it should create a new service worker
+                    div(style="display:inline-block")
                         h2.share-button.pushNotificationIcon(style="display:inline")
                             i.share-icon.fas.fa-bell(aria-hidden="true" style="cursor:pointer;font-size:25px;margin-left:0px;color:white;")
+                        p.pushSubscriptions(style="margin-left:1px") #{amountOfPushSubscriptions}
+                    div(style="display:inline-block")
                         h2.share-button.emailNotificationIcon(style="display:inline")
                             i.share-icon.fas.fa-envelope(aria-hidden="true" style="cursor:pointer;font-size:25px;margin-left:10px;color:white;")
+                        p.emailSubscriptions(style="margin-left:10px") #{amountOfEmailSubscriptions}
 
                 // todo: else
                 // let's put an 'else' here and here and show those same buttons
@@ -139,7 +149,12 @@ block content
                                 input(type='hidden', name='user', value=`${channel._id}`)
                                 button.btn.btn-primary(name="userChangeValue" value="trustUser" type="submit" ) Trust User
                                 button.btn.btn-danger(name="userChangeValue" value="untrustUser" type="submit" ) Untrust User
-                                p User Trusted: #{user.privs.autoVisibleUpload}
+                                br
+                                br
+                                p User Trusted: #{channel.privs.autoVisibleUpload}
+                                if channel.stripeCustomerId
+                                    p Stripe Customer ID: #{channel.stripeCustomerId}
+
 
                     if user && ( user.role == 'admin' || user.role == 'moderator') && channel.status == 'restricted'
 
@@ -149,14 +164,14 @@ block content
                         //button.undelete-account.btn.btn-warning Undelete Account And Unban Ip
                         if user.role == 'admin'
                             button.delete-ips.btn.btn-warning Undelete All Accounts / Unban All Ips
-                      
+
 
         div
 
     div(style="margin-top:80px;")
         div
 
-    p
+    p#scrollToMe
     hr
 
 
@@ -169,13 +184,14 @@ block content
 
             ul.dropdown-menu.dropdown
                 li
-                    a(href=`/user/${channel.channelUrl}?orderBy=popular&mediaType=${media}&page=${page}`) Popular
+                    // TODO: could replace this
+                    a(href=`/user/${channel.channelUrl}?orderBy=popular&mediaType=${media}&nav=true`) Popular
                 li
-                    a(href=`/user/${channel.channelUrl}?orderBy=newToOld&mediaType=${media}&page=${page}`) New To Old
+                    a(href=`/user/${channel.channelUrl}?orderBy=newToOld&mediaType=${media}&nav=true`) New To Old
                 li
-                    a(href=`/user/${channel.channelUrl}?orderBy=oldToNew&mediaType=${media}&page=${page}`) Old To New
+                    a(href=`/user/${channel.channelUrl}?orderBy=oldToNew&mediaType=${media}&nav=true`) Old To New
                 li
-                    a(href=`/user/${channel.channelUrl}?orderBy=alphabetical&mediaType=${media}&page=${page}`) Alphabetical
+                    a(href=`/user/${channel.channelUrl}?orderBy=alphabetical&mediaType=${media}&nav=true`) Alphabetical
 
         div.search-upload-buttons-container.dropdown(style="display:inline;padding-right:15px;")
             button#dropdownMenu1.fw.btn.btn-primary.dropdown-toggle(type='button', data-toggle='dropdown' style="border-radius:5px;")
@@ -184,13 +200,13 @@ block content
 
             ul.dropdown-menu(role='menu', aria-labelledby='dropdownMenu1')
                 li(role='presentation')
-                    a(href=`/user/${channelUrl}/?mediaType=all&orderBy=${orderBy}&page=${page}`) All
+                    a(href=`/user/${channelUrl}/?mediaType=all&orderBy=${orderBy}&nav=true`) All
                 li(role='presentation')
-                    a(href=`/user/${channelUrl}/?mediaType=video&orderBy=${orderBy}&page=${page}`) Videos
+                    a(href=`/user/${channelUrl}/?mediaType=video&orderBy=${orderBy}&nav=true`) Videos
                 li(role='presentation')
-                    a(href=`/user/${channelUrl}/?mediaType=audio&orderBy=${orderBy}&page=${page}`) Audio
+                    a(href=`/user/${channelUrl}/?mediaType=audio&orderBy=${orderBy}&nav=true`) Audio
                 li(role='presentation')
-                    a(href=`/user/${channelUrl}/?mediaType=image&orderBy=${orderBy}&page=${page}`) Images
+                    a(href=`/user/${channelUrl}/?mediaType=image&orderBy=${orderBy}&nav=true`) Images
 
 
         include ../viewPartials/sensitivityFilterDropdown
@@ -204,7 +220,7 @@ block content
 
     div.container
         each upload in channel.uploads
-            div.col-xs-12.col-sm-6.col-md-6.col-lg-4(style="text-align:center;height:330px;margin-bottom:50px;")
+            div.uploadCard.col-xs-12.col-sm-6.col-md-6.col-lg-4(style="text-align:center;height:330px;margin-bottom:15px;")
                 if isUser || isAdmin || ( user && user.role == 'moderator' )
                     div.editFileButtons(style="")
                         form.editLink(action="/api/upload/delete" method="POST" style="display:inline-block")
@@ -252,152 +268,29 @@ block content
 
     include ../mediaPlayerPartials/thing
 
+    script.
+      $(document).ready(function () {
+        function getParameterByName(name, url = window.location.href) {
+          name = name.replace(/[\[\]]/g, '\\$&');
+          var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
+            results = regex.exec(url);
+          if (!results) return null;
+          if (!results[2]) return '';
+          return decodeURIComponent(results[2].replace(/\+/g, ' '));
+        }
+
+        var navValue = getParameterByName('nav');
+        if(navValue == 'true'){
+          setTimeout(function(){
+            document.getElementById('scrollToMe').scrollIntoView();
+          }, 10)
+        }
+
+      });
 
     if user
-        script.
+        include ../pugJavascript/emailAndPushNotifications
 
-            $(document).ready(function(){
-
-              var alreadyHaveEmailNotifsOn = '#{alreadySubscribedForEmails}' == 'true'
-              
-              console.log('already have email notis on')
-
-              if (alreadyHaveEmailNotifsOn) {
-                $('.emailNotificationIcon i').css('color', 'white')
-              } else {
-                $('.emailNotificationIcon i').css('color', 'gray')
-              }
-
-              $('.emailNotificationIcon').click(function () {
-                console.log('Email notification icon clicked');
-                var csrf = '#{_csrf}'
-
-                const data = {
-                  _csrf: csrf,
-                  user: '#{user.channelUrl}',
-                  channel: '#{channel.channelUrl}'
-                }
-
-                $.ajax({
-                  type: 'POST',
-                  url: `/api/subscribeToEmailNotifications`,
-                  data,
-                  success: function (data) {
-
-                    $('.emailNotificationIcon i').css('color', 'white')
-                    let swalText = 'You have subscribed to their email notifications'
-
-                    if (alreadyHaveEmailNotifsOn) {
-                      swalText = 'You have unsubscribed from their email notifications'
-                      $('.emailNotificationIcon i').css('color', 'gray')
-                    }
-
-                    swal(swalText);
-
-                    alreadyHaveEmailNotifsOn = !alreadyHaveEmailNotifsOn;
-
-                    console.log(data);
-
-                    // Shows undefined when at 100%
-
-
-                  },
-                  error: function (err) {
-                    console.log(err);
-                  }
-                });
-              })
-
-              var alreadyHavePushNotifsOn = '#{alreadyHavePushNotifsOn}' == 'true'
-
-              console.log('readl');
-              console.log(alreadyHavePushNotifsOn);
-
-              if (alreadyHavePushNotifsOn) {
-                $('.pushNotificationIcon i').css('color', 'white')
-              } else {
-                $('.pushNotificationIcon i').css('color', 'gray')
-              }
-
-              if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-                $('.pushNotificationIcon i').hide()
-              }
-
-
-              $('.pushNotificationIcon').click(function () {
-                console.log('hello');
-                var csrf = '#{_csrf}'
-
-                const data = {
-                  _csrf: csrf,
-                  user: '#{user.channelUrl}',
-                  channel: '#{channel.channelUrl}'
-                }
-
-                $.ajax({
-                  type: 'POST',
-                  url: `/api/subscribeToPushNotifications`,
-                  data,
-                  success: function (data) {
-
-                    // by default, turn the color grey and load up 'you have subbed' as the text
-                    $('.pushNotificationIcon i').css('color', 'white')
-                    let swalText = 'You have subscribed to their push notifications'
-
-                    // if push notifs already on
-                    if (alreadyHavePushNotifsOn) {
-                      swalText = 'You have unsubscribed from their push notifications'
-                      $('.pushNotificationIcon i').css('color', 'gray')
-                    }
-
-                    swal(swalText);
-
-                    alreadyHavePushNotifsOn = !alreadyHavePushNotifsOn;
-
-                    console.log(data);
-                    //- console.log(data);
-
-                    // Shows undefined when at 100%
-
-
-                  },
-                  error: function (err) {
-                    console.log(err);
-                  }
-                });
-              })
-            })
-
-
-
-
-        script.
-          $('.unsubscribePushButton').click(function () {
-            console.log('hello');
-            var csrf = '#{_csrf}'
-
-            const data = {
-              _csrf: csrf,
-              user: '#{user.channelUrl}',
-              channel: '#{channel.channelUrl}'
-            }
-
-            $.ajax({
-              type: 'POST',
-              url: `/api/subscribeToPushNotifications`,
-              data,
-              success: function (data) {
-                //- console.log(data);
-
-                // Shows undefined when at 100%
-
-
-              },
-              error: function (err) {
-                console.log(err);
-              }
-            });
-            })
 
     if user && user.role == 'admin'
         script.
@@ -429,10 +322,14 @@ block content
 
             })
 
-    script.
-        $('.pushNotificationIcon').click(function(){
-            main();
-        })
+    if user
+        script.
+          // pretty sure this is the register of a worker
+          $('.pushNotificationIcon').click(function(){
+                main();
+            })
+    else
+        include ../pugJavascript/registerToUseFeature
 
 
 
