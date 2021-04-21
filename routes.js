@@ -254,6 +254,7 @@ function frontendRoutes(app){
   /** include passport here because if its a file host, route is already loaded **/
   app.post('/api/channel/thumbnail/delete', passportConfig.isAuthenticated, internalApiController.deleteChannelThumbnail);
   app.post('/api/deleteUserEmail', passportConfig.isAuthenticated, internalApiController.deleteUserEmail);
+  app.post('/api/cancelPlusSubscription', passportConfig.isAuthenticated, internalApiController.cancelPlusSubscription);
 
   app.post('/api/upload/:uniqueTag/edit', passportConfig.isAuthenticated, internalApiController.editUpload);
   app.post('/api/upload/:uniqueTag/thumbnail/delete', passportConfig.isAuthenticated, internalApiController.deleteUploadThumbnail);
@@ -285,7 +286,7 @@ function frontendRoutes(app){
   // purchase endpoints
   app.post('/api/purchase/plus', passportConfig.isAuthenticated, purchaseController.purchasePlus);
   app.post('/api/purchase/donation', purchaseController.donation);
-  app.post('/api/purchase/credit',passportConfig.isAuthenticated,  purchaseController.purchaseCredits);
+  app.post('/api/purchase/credit', passportConfig.isAuthenticated,  purchaseController.purchaseCredits);
 
   app.get('/importer', accountFrontendController.getImporter);
   app.post('/importer', accountBackendController.postImporter);

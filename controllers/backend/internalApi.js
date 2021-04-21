@@ -25,6 +25,7 @@ const FileType = require('file-type');
 const srt2vtt = Promise.promisifyAll(require('srt2vtt'));
 
 const backblaze = require('../../lib/uploading/backblaze');
+const stripe = require('../../lib/payments/stripe');
 
 const domainNameAndTLD = process.env.DOMAIN_NAME_AND_TLD;
 
@@ -332,6 +333,47 @@ exports.deleteUserEmail = async(req, res, next) => {
 
     req.user.email = undefined;
     req.user.emailConfirmed = false;
+
+    await req.user.save();
+
+    return res.send('success');
+  } catch(err){
+
+    console.log(err);
+    res.status(500);
+    res.send('wrong');
+
+  }
+};
+
+/** cancel plus subscription from account page **/
+exports.cancelPlusSubscription = async(req, res, next) => {
+
+  try {
+    console.log(req.body.uploadToken);
+
+    if(!req.user && req.body.uploadToken){
+      req.user = await User.findOne({ uploadToken : req.body.uploadToken });
+    }
+
+    // change the renewal date to the cancellation date
+    req.user.stripeSubscriptionCancellationDate = req.user.stripeSubscriptionRenewalDate;
+
+    // clear off renewal date (which is used to check)
+    req.user.stripeSubscriptionRenewalDate = undefined;
+
+    // get subscription id
+    const subscriptionId = req.user.stripeSubscriptionId;
+
+    // cancel subscription
+    const subscription = await stripe.stripeApi.subscriptions.del(subscriptionId);
+
+    // mark subscription as cancelled
+    if(subscription.status !== 'active'){
+      req.user.stripeSubscriptionStatus = subscription.status;
+    }
+
+    console.log(req.user);
 
     await req.user.save();
 
@@ -1201,7 +1243,7 @@ exports.subscribeToPushNotifications = async function(req, res, next){
   // already exists and turned on, turn it off
   if(existingActivePushSubscription){
     responseText = 'already active, make it inactive';
-    console.log(responseText);
+    // console.log(responseText);
     existingActivePushSubscription.active = false;
     await existingActivePushSubscription.save();
   }
@@ -1213,20 +1255,20 @@ exports.subscribeToPushNotifications = async function(req, res, next){
 
     if(existingInactivePushNotif){
       responseText = 'already existing inactive, make it active';
-      console.log(responseText);
+      // console.log(responseText);
       existingInactivePushNotif.active = true;
       await existingInactivePushNotif.save();
     } else {
       responseText = 'create a new push sub';
 
-      console.log(responseText);
+      // console.log(responseText);
       let pushEndpoint = new PushSubscription({
         subscribingUser,
         subscribedToUser: foundUser,
         active: true
       });
 
-      console.log(pushEndpoint);
+      // console.log(pushEndpoint);
 
       await pushEndpoint.save();
     }

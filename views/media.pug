@@ -53,6 +53,57 @@ block content
             }
 
     style.
+        .right-menu {
+            width: 164px;
+            z-index: 1;
+            background: #1A1A1A;
+            box-shadow: 0 4px 5px 3px rgba(0, 0, 0, 0.2);
+            position: fixed;
+            display: none;
+            transition: 0.2s display ease-in;
+        }
+        .menu-option li, .menu-option i {
+            display:inline;
+        }
+
+        .right-menu .menu-options {
+            list-style: none;
+            padding: 10px 0;
+            z-index: 1;
+        }
+        .right-menu .menu-options .menu-option {
+            font-weight: 500;
+            z-index: 1;
+            font-size: 14px;
+            padding: 10px 40px 10px 20px;
+            cursor: pointer;
+        }
+        .right-menu .menu-options .menu-option:hover {
+            background: #3B3B3B;
+        }
+        button {
+            background: grey;
+            border: none;
+        }
+        button .next {
+            color: green;
+        }
+        button[disabled="false"]:hover .next {
+            color: red;
+            animation: move 0.5s;
+            animation-iteration-count: 2;
+        }
+        @keyframes move {
+            from {
+                transform: translate(0%);
+            }
+            50% {
+                transform: translate(-40%);
+            }
+            to {
+                transform: transform(0%);
+            }
+        }
 
         .plyr {
             max-height: 102.5vh;
@@ -390,6 +441,31 @@ block content
 
 
 
+    div#rightClickMenu.right-menu(style="position:absolute;")
+        ul.menu-options
+            div
+                h4.fw(style="margin-left:24px") Menu Options
+            div.menu-option.download-button
+                i.download-icon.fa.fa-download(aria-hidden="true" style="cursor:pointer;color:#a5a5a5;")
+                li Download
+            div.menu-option.share-button
+                i.share-icon.fas.fa-code(aria-hidden="true" style="cursor:pointer;margin-left:-2px;")
+                li.share-button(style="margin-left:6px;") Embed
+            div.menu-option.report-button
+                i.share-icon.fa.fa-exclamation-triangle(aria-hidden="true" style="cursor:pointer;")
+                li.report-button Report
+            div.menu-option.copy-button
+                i.fas.fa-copy
+                li.copy-button(data-clipboard-text=`${upload.title} \n\n${url}` style="margin-left:6px;") Copy Details
+            if upload.fileType === 'audio' || upload.fileType === 'video'
+                div.menu-option.repeat-div
+                    i.repeat-icon.fa.fa-repeat(aria-hidden="true" style="cursor:pointer")
+                    li.menu-option.repeat-div(style="opacity:1;margin-left:-18px;") Repeat
+            if upload.fileType === 'video'
+                div.menu-option.screenshotButton
+                    i.fa.fa-camera(aria-hidden="true" style="cursor:pointer;color:#a5a5a5;")
+                    li.screenshotButton(style="margin-left:0px !important;") Screenshot
+
     div.center-block.text-center.col-sm-12.pageContainer(style="overflow-x: hidden;margin-top:-2px;padding-right:0px;padding-left:0px;")
         if upload.status == 'processing'
 
@@ -408,7 +484,7 @@ block content
             div.display-div.magnetic(style="min-width:50%;min-height:50%;margin:0 auto;margin-top: -25px;")
                 // margin-top:46px;
 
-                video#media_player.display-element(playsinline poster=`${uploadServer}/${upload.uploader.channelUrl}/${upload.thumbnails.generated || upload.thumbnails.medium}` controls='', style="max-width:100%;background-color:black;" crossorigin="anonymous")
+                video#media_player.display-element(playsinline poster=`${uploadServer}/${upload.uploader.channelUrl}/${upload.thumbnails.generated || upload.thumbnails.medium}` controls='', style="max-width:100%;background-color:black;" crossorigin="anonymous" preload="auto")
                     // to
                     source.video-source(src=`${serverToUse}/${upload.uploader.channelUrl}/${upload.uniqueTag}.mp4`, type='video/mp4')
 
@@ -423,7 +499,7 @@ block content
             // if it's an audio
         else if upload.fileType === 'audio'
             div
-                audio#media_player.my_audio(playsinline style="width:80%;" controls='', preload='auto')
+                audio#media_player.my_audio.display-element(playsinline style="width:80%;" controls='', preload='auto')
 
                     if upload.fileExtension == '.m4a'
                         source(src=`${serverToUse}/${upload.uploader.channelUrl}/${upload.uniqueTag}${upload.fileExtension}`, type='audio/mp4')
@@ -624,12 +700,12 @@ block content
 
                         div.bottomButtons(style="margin-top:-17px;padding-bottom:10px;")
 
-                            //// embed button
+                            // embed button
                             div.change-size-button(style="margin-left:0px;color: rgb(121 119 119) !important;")
                                 h2.share-button
                                     i.share-icon.fas.fa-code(aria-hidden="true" style="cursor:pointer;font-size:26px;margin-left:0px;")
 
-                            // report upload button
+                            // rss button
                             div.change-size-button(style="cursor:pointer;margin-left:6px;color: rgb(121 119 119) !important;")
                                 h2.rss-button(style="font-size:19px;")
                                     i.share-icon.fas.fa-rss(aria-hidden="true" style="cursor:pointer;font-size:26px;")
@@ -911,6 +987,76 @@ block extra_js
         })
   else
       include pugJavascript/registerToUseFeature
+
+  script.
+    // document.getElementById('media_player').oncontextmenu = function () {
+    //   rightClickMenu();
+    // }
+
+    var menu = document.querySelector("#rightClickMenu");
+    let menuVisible = false;
+
+    function toggleMenu(command) {
+
+      // if command is show, inline, otherwise return none
+      var determineVisibility = command === "show" ? "inline" : "none";
+
+      // set display based on on command
+      menu.style.display = determineVisibility
+
+      // reverse menu visibility
+      menuVisible = !menuVisible;
+    }
+
+    window.addEventListener("click", e => {
+      // alert('hello!');
+
+      toggleMenu("hide");
+    });
+
+    // determine where to display menu
+    const setPosition = ({top, left}) => {
+      menu = document.querySelector("#rightClickMenu");
+      menu.style.left = `${left}px`;
+      menu.style.top = `${top}px`;
+    };
+
+    // on right click, set position
+    window.addEventListener("contextmenu", e => {
+
+      console.log(e.target);
+
+      var displayElementClicked = e.target.classList.contains('display-element')
+
+      var plyrControlsClicked = e.target.classList.contains('plyr__controls') || e.target.classList.contains('plyr__controls__item')
+
+      var plyrThingClicked = e.target.hasAttribute('data-plyr');
+
+
+      if(displayElementClicked || plyrControlsClicked || plyrThingClicked){
+        e.preventDefault();
+
+        rightClickMenu(e);
+      }
+    });
+
+    // toggle visibility of rightClickMenu
+    function rightClickMenu(e) {
+
+      e.preventDefault();
+      //
+      const origin = {
+        left: e.clientX,
+        top: e.clientY
+      };
+      setPosition(origin);
+
+      toggleMenu('show');
+
+      return false;
+    }
+
+
 
   script.
 
@@ -1579,4 +1725,32 @@ block extra_footer_js
   else
       script.
         var user = undefined
+
+  script.
+    $(document).keyup(function (e) {
+      var mediaPlayer = document.getElementById("media_player");
+
+      var activeElement = document.activeElement;
+      var inputs = ['input', 'textarea'];
+
+      var plyrElementNotFocused = !document.activeElement.classList.contains('plyr')
+
+      var inputElementNotFocused = inputs.indexOf(activeElement.tagName.toLowerCase()) === -1;
+
+      if (activeElement && plyrElementNotFocused && inputElementNotFocused) {
+
+        if (e.keyCode === 37) {
+
+          mediaPlayer.currentTime = mediaPlayer.currentTime - 5;
+
+          return false;
+
+        } else if (e.keyCode === 39) {
+
+          mediaPlayer.currentTime = mediaPlayer.currentTime + 5;
+
+          return false;
+        }
+      }
+    });
 

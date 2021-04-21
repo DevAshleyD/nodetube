@@ -3,6 +3,8 @@
 
 const randomstring = require('randomstring');
 const _ = require('lodash');
+const moment = require('moment');
+
 const User = require('../../models/index').User;
 const Upload = require('../../models/index').Upload;
 const Comment = require('../../models/index').Comment;
@@ -533,7 +535,7 @@ exports.getChannel = async(req, res) => {
 
     if(user.channelDescription) res.locals.meta.description = user.channelDescription;
 
-    saveMetaToResLocalForChannelPage(user, uploadServer, req, res)   ;
+    saveMetaToResLocalForChannelPage(user, uploadServer, req, res);
 
     const userUploadAmount = uploads.length;
 
@@ -925,7 +927,8 @@ exports.getAccount = async(req, res) => {
     uploadServer,
     thumbnailServer,
     plusEnabled,
-    verifyEmailFunctionalityOn
+    verifyEmailFunctionalityOn,
+    moment
   });
 };
 
@@ -1148,8 +1151,12 @@ exports.getImporter = (req, res) => {
     return res.redirect('/login');
   }
 
-  if(!req.user.privs.importer){
-    return res.redirect('/login');
+  if(req.user && !req.user.privs.importer){
+    res.status(404);
+
+    return res.render('error/404', {
+      title: 'Not Found'
+    });
   }
 
   res.render('account/importer', {
