@@ -27,6 +27,15 @@ const commandExists = require('command-exists');
 const errorHandler = require('errorhandler');
 const jsHelpers = require('./lib/helpers/js-helpers');
 
+const MongoClient = require('mongodb').MongoClient;
+const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+client.connect(err => {
+  const collection = client.db("test").collection("devices");
+  // perform actions on the collection object
+  client.close();
+});
+
+
 /** FOR FINDING ERRANT LOGS **/
 if(process.env.SHOW_LOG_LOCATION == 'true' || 1 == 2){
   jsHelpers.showLogLocation();
