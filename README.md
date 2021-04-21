@@ -1,3 +1,5 @@
+[![Gitpod ready-to-code](https://img.shields.io/badge/Gitpod-ready--to--code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/mayeaux/nodetube)
+
 # NodeTube
 NodeTube is an open-source YouTube alt that offers video, audio and image uploads, livestreaming and built-in monetization
 
